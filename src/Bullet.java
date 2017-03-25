@@ -1,6 +1,5 @@
 public class Bullet extends Sprite {
 
-	// private final int BOARD_HEIGHT = Craft.WINDOW_HEIGHT;
 	private final int MISSILE_SPEED = 2;
 	private boolean enemy = false;
 	private boolean super_bullet = false;
@@ -22,7 +21,7 @@ public class Bullet extends Sprite {
 	}
 
 	public void move() {
-
+		
 		if (enemy) {
 			y += MISSILE_SPEED;
 

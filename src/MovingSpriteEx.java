@@ -61,15 +61,6 @@ private void initUI(Client client) {
     }
 
     public static void main(String[] args) {
-        
-        /*EventQueue.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                
-                MovingSpriteEx ex = new MovingSpriteEx();
-                ex.setVisible(true);
-            }
-        });*/
     	
     	JFrame fenetre = new JFrame();
 		JButton start, join;
@@ -93,7 +84,7 @@ private void initUI(Client client) {
 		fenetre.add(txtField);
 		fenetre.setVisible(true);
 		
-		
+		//Si on lance une nouvelle partie (Mode serveur)
 		start.addActionListener(new ActionListener() {
 			
 			@Override
@@ -139,8 +130,6 @@ private void initUI(Client client) {
 							fenetre.setVisible(false);
 							ex.setVisible(true);
 							
-							//server.listen();
-							
 						} catch (IOException e) {
 							// TODO Auto-generated catch block
 							e.printStackTrace();
@@ -150,28 +139,17 @@ private void initUI(Client client) {
 					}
 				});
 				t.start();
-				
-				
-				
-				/*new Thread(new Runnable() {
-					// Thread d'écriture vers le client
-					@Override
-					public void run() {
-						while (server.OK) {
-							server.write();
-						}
 
-					}
-				}).start();*/
 			}
 		});
 		
-		
+		//Si l'on rejoint une partie existante (mode Client)
 		join.addActionListener(new ActionListener() {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				String ipAddress = txtField.getText();
+				//On vérifie que l'ip saisie a un format correcte
 				if (isIp(ipAddress)) {
 					client = new Client(ipAddress, 6665);
 					fenetre.setVisible(false);
@@ -179,48 +157,22 @@ private void initUI(Client client) {
 					EventQueue.invokeLater(new Runnable() {
 			            @Override
 			            public void run() {
-			                
 			                ex = new MovingSpriteEx(client);
 			                ex.setVisible(true);
 			            }
 			        });
 
-					/*new Thread(new Runnable() {
-
-						@Override
-						public void run() {
-							// Thread d'écoute du serveur
-							while (client.OK) {
-									client.listen();
-							}
-						}
-					}).start();
-
-					new Thread(new Runnable() {
-
-						@Override
-						public void run() {
-							// Thread d'écriture vers le serveur
-							while (client.OK) {
-								client.write();
-							}
-
-						}
-					}).start();*/
-
 				}
-
 				else
 					JOptionPane.showMessageDialog(fenetre, "Veuillez saisir une adresse valide !!", "Attention",
 							JOptionPane.WARNING_MESSAGE);
-
 			}
 		}); 	
 		
 		
 		Runtime.getRuntime().addShutdownHook(new Thread(new Runnable() {
 		    public void run() {
-		        // Appelée à la fin du programme.
+		        // Appelée à la fin du programme (pour quitter proprement).
 		    	if (server != null)
 					server.write("exit");
 				else if(client != null)

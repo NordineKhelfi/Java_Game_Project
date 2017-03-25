@@ -21,6 +21,7 @@ public class Board extends JPanel implements ActionListener {
 	public Server server = null;
 	public Client client = null;
 
+	/* Pour l'échange Client <--> Serveur */
 	String mySpeak = "none";
 	String enemySpeak = "none";
 	String check = "none";
@@ -32,10 +33,15 @@ public class Board extends JPanel implements ActionListener {
 	ImageIcon ii = new ImageIcon("images/59_heart.png");
 	Image heart = ii.getImage();
 	Image explosion = (new ImageIcon("images/spideyblast.gif")).getImage();
+	
 	private final int DELAY = 10;
 	private Timer timer2;
 	public static boolean ingame = true;
 
+	/*Surcharge du constructeur:
+	 * --> Mode Serveur
+	 * --> Mode Client
+	 */
 	public Board(Server server) {
 
 		this.server = server;
@@ -58,12 +64,20 @@ public class Board extends JPanel implements ActionListener {
 		craft = new Craft();
 		craft_en = new Craft_Enemy();
 
+		/*
+		 * Ce TIMER gère:
+		 * --> Le déplacement du Craft
+		 * --> Le déplacement du Craft_enemy
+		 * --> La gestion des misiles
+		 * --> La détéction de collisions
+		 * --> Le "repaint"
+		 */
 		timer = new Timer(DELAY, this);
-
 		timer.start();
 
 		timer2 = new Timer(1300, new ActionListener() {
 
+		//Ce TIMER gère l'affichage de l'explosion, la fin de jeu
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
@@ -79,6 +93,11 @@ public class Board extends JPanel implements ActionListener {
 
 				while (true) {
 					System.out.println(enemySpeak);
+					/* 
+					 * En fonction de la "string" reçue, on gère le comportement de l'ennemi:
+					 * 		--> "craft_en" si nous sommes le serveur
+					 * 		--> "craft" si nous sommes le client
+					 */
 					if (server != null && server.dis != null) {
 						enemySpeak = server.listen1();
 						System.out.println(enemySpeak);
@@ -179,6 +198,7 @@ public class Board extends JPanel implements ActionListener {
 		Graphics2D g2d = (Graphics2D) g;
 		if (ingame) {
 
+			//Le craft
 			if (craft.isVisible())
 				g2d.drawImage(craft.getImage(), craft.getX(), craft.getY(), this);
 			else {
@@ -186,6 +206,7 @@ public class Board extends JPanel implements ActionListener {
 				timer2.start();
 			}
 
+			//Le craft ennemy
 			if (craft_en.isVisible())
 				g2d.drawImage(craft_en.getImage(), craft_en.getX(), craft_en.getY(), this);
 			else {
@@ -193,6 +214,7 @@ public class Board extends JPanel implements ActionListener {
 				timer2.start();
 			}
 
+			//Les missiles
 			ArrayList<Bullet> ms = craft.getMissiles();
 
 			for (Object m1 : ms) {
@@ -200,6 +222,7 @@ public class Board extends JPanel implements ActionListener {
 				g2d.drawImage(m.getImage(), m.getX(), m.getY(), this);
 			}
 
+			//Les missiles ennemies
 			ArrayList<Bullet> ms_en = craft_en.getMissiles();
 
 			for (Object m1 : ms_en) {
@@ -207,6 +230,7 @@ public class Board extends JPanel implements ActionListener {
 				g2d.drawImage(m.getImage(), m.getX(), m.getY(), this);
 			}
 
+			//Les vies (Joueur et Ennemi)
 			g2d.drawImage(heart, 20, 20, this);
 			g2d.drawImage(heart, craft.WINDOW_WIDTH - 120, craft.WINDOW_HEIGHT - 90, this);
 			g.setColor(Color.BLACK);
@@ -215,6 +239,7 @@ public class Board extends JPanel implements ActionListener {
 			g.drawString("x " + craft.lives, craft.WINDOW_WIDTH - 75, craft.WINDOW_HEIGHT - 60);
 
 		} else {
+			//Game Over
 			String msg = "Game Over";
 			Font small = new Font("Helvetica", Font.BOLD, 50);
 			FontMetrics fm = getFontMetrics(small);
@@ -228,7 +253,7 @@ public class Board extends JPanel implements ActionListener {
 
 	@Override
 	public void actionPerformed(ActionEvent e) {
-
+		//Associée à TIMER (DELAY = 10 ms)
 		if (!ingame) {
 			timer.stop();
 		}
@@ -243,7 +268,7 @@ public class Board extends JPanel implements ActionListener {
 	}
 
 	private void updateMissiles() {
-
+		//Gestion des missiles joueurs
 		ArrayList<Bullet> ms = craft.getMissiles();
 
 		for (int i = 0; i < ms.size(); i++) {
@@ -257,6 +282,7 @@ public class Board extends JPanel implements ActionListener {
 			}
 		}
 
+		//Gestion des missiles ennemis
 		ms = craft_en.getMissiles();
 
 		for (int i = 0; i < ms.size(); i++) {
@@ -272,7 +298,8 @@ public class Board extends JPanel implements ActionListener {
 	}
 
 	public void checkCollisions() {
-
+		
+		//Si le joueur touche l'ennemi
 		ArrayList<Bullet> ms = craft.getMissiles();
 		Rectangle r2 = craft_en.getBounds();
 
@@ -286,6 +313,7 @@ public class Board extends JPanel implements ActionListener {
 
 		}
 
+		//Si l'ennemi touche le joueur
 		ms = craft_en.getMissiles();
 		r2 = craft.getBounds();
 
@@ -302,11 +330,19 @@ public class Board extends JPanel implements ActionListener {
 
 	private class TAdapter extends KeyAdapter {
 
+		//à l'appui
 		@Override
 		public void keyPressed(KeyEvent e) {
-
+			
+			/*
+			 * Que l'on soit Client ou Serveur, on va:
+			 * 		--> Gérer notre vaisseau (en local)
+			 * 		--> Faire suivre l'information à l'adversaire en même temps
+			 */
+			
 			int key = e.getKeyCode();
 
+			
 			if (client != null) {
 				if (key == KeyEvent.VK_LEFT) {
 					craft_en.dx = -craft_en.DELTA;
@@ -361,6 +397,7 @@ public class Board extends JPanel implements ActionListener {
 				}
 			}
 
+			//Afin d'éviter d'envoyer inutilement la même information en boucle
 			if (!mySpeak.equals(check)) {
 				if (server != null)
 					server.write(mySpeak);
@@ -371,9 +408,16 @@ public class Board extends JPanel implements ActionListener {
 
 		}
 
+		//Au relâchement
 		@Override
 		public void keyReleased(KeyEvent e) {
 
+			/*
+			 * Que l'on soit Client ou Serveur, on va:
+			 * 		--> Gérer notre vaisseau (en local)
+			 * 		--> Faire suivre l'information à l'adversaire en même temps
+			 */
+			
 			int key = e.getKeyCode();
 
 			if (client != null) {

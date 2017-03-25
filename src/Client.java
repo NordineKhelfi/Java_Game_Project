@@ -23,6 +23,9 @@ public class Client {
 		}
 	}
 
+	
+	//Cette méthode a surtout servi dans un premier temps pour le debug (échange via la console)
+	//Elle n'est maintenant plus appelée
 	public void listen() {
 		try {
 			String str = dis.readUTF();
@@ -58,6 +61,9 @@ public class Client {
 
 	}
 
+	
+	//Cette méthode a surtout servi dans un premier temps pour le debug (échange via la console)
+	//Elle n'est maintenant plus appelée
 	public void write() {
 		String str = sc.nextLine();
 		try {

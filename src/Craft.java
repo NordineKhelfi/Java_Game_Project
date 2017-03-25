@@ -33,8 +33,7 @@ public class Craft extends Sprite {
 	}
 
 	public void fire(boolean s_bullet) {
-		// missiles.add(new Bullet(x + image.getWidth(null)/2, y)); // Lorsqu'on
-		// construit le bullet, on met le visible à true.
+		// Lorsqu'on construit le bullet, on met le visible à true.
 		// missiles.add(new Bullet(x , y));
 		missiles.add(new Bullet(x + image.getWidth(null) / 4, y, false, s_bullet));
 	}

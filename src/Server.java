@@ -19,6 +19,8 @@ public class Server {
 		this.port = port;
 	}
 
+	//Cette méthode a surtout servi dans un premier temps pour le debug (échange via la console)
+	//Elle n'est maintenant plus appelée
 	public void listen() {
 		try {
 			while (OK) {
@@ -37,6 +39,7 @@ public class Server {
 
 	}
 
+	
 	public String listen1() {
 		String str = "none";
 		try {
@@ -74,6 +77,9 @@ public class Server {
 
 	}
 
+	
+	//Cette méthode a surtout servi dans un premier temps pour le debug (échange via la console)
+	//Elle n'est maintenant plus appelée
 	public void write() {
 		String str = sc.nextLine();
 		try {
