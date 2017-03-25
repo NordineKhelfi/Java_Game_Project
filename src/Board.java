@@ -18,6 +18,13 @@ import javax.swing.Timer;
 
 public class Board extends JPanel implements ActionListener {
 
+	public Server server = null;
+	public Client client = null;
+
+	String mySpeak = "none";
+	String enemySpeak = "none";
+	String check = "none";
+
 	private Timer timer;
 	private Craft craft;
 	private Craft_Enemy craft_en;
@@ -29,8 +36,15 @@ public class Board extends JPanel implements ActionListener {
 	private Timer timer2;
 	public static boolean ingame = true;
 
-	public Board() {
+	public Board(Server server) {
 
+		this.server = server;
+		initBoard();
+	}
+
+	public Board(Client client) {
+
+		this.client = client;
 		initBoard();
 	}
 
@@ -45,11 +59,11 @@ public class Board extends JPanel implements ActionListener {
 		craft_en = new Craft_Enemy();
 
 		timer = new Timer(DELAY, this);
-		
+
 		timer.start();
-		
+
 		timer2 = new Timer(1300, new ActionListener() {
-			
+
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
@@ -57,6 +71,98 @@ public class Board extends JPanel implements ActionListener {
 				timer2.stop();
 			}
 		});
+
+		new Thread(new Runnable() {
+			// Thread d'observation de l'ennemi en réseau
+			@Override
+			public void run() {
+
+				while (true) {
+					System.out.println(enemySpeak);
+					if (server != null && server.dis != null) {
+						enemySpeak = server.listen1();
+						System.out.println(enemySpeak);
+
+						switch (enemySpeak) {
+
+						case "dx=5":
+							craft_en.dx = 5;
+							break;
+
+						case "dx=-5":
+							craft_en.dx = -5;
+							break;
+
+						case "dy=5":
+							craft_en.dy = 5;
+							break;
+
+						case "dy=-5":
+							craft_en.dy = -5;
+							break;
+
+						case "dx=0":
+							craft_en.dx = 0;
+							break;
+
+						case "dy=0":
+							craft_en.dy = 0;
+							break;
+
+						case "fire":
+							craft_en.fire(false);
+							break;
+							
+						case "exit":
+							System.exit(0);
+						}
+						
+						
+
+					}
+					else if(client != null){
+						enemySpeak = client.listen1();
+						System.out.println(enemySpeak);
+
+						switch (enemySpeak) {
+
+						case "dx=5":
+							craft.dx = 5;
+							break;
+
+						case "dx=-5":
+							craft.dx = -5;
+							break;
+
+						case "dy=5":
+							craft.dy = 5;
+							break;
+
+						case "dy=-5":
+							craft.dy = -5;
+							break;
+
+						case "dx=0":
+							craft.dx = 0;
+							break;
+
+						case "dy=0":
+							craft.dy = 0;
+							break;
+
+						case "fire":
+							craft.fire(false);
+							break; 
+							
+						case "exit":
+							System.exit(0);
+						}
+					}
+
+				}
+
+			}
+		}).start();
 	}
 
 	@Override
@@ -72,17 +178,17 @@ public class Board extends JPanel implements ActionListener {
 
 		Graphics2D g2d = (Graphics2D) g;
 		if (ingame) {
-			
+
 			if (craft.isVisible())
 				g2d.drawImage(craft.getImage(), craft.getX(), craft.getY(), this);
-			else{
+			else {
 				g2d.drawImage(explosion, craft.getX(), craft.getY(), this);
 				timer2.start();
 			}
-			
+
 			if (craft_en.isVisible())
 				g2d.drawImage(craft_en.getImage(), craft_en.getX(), craft_en.getY(), this);
-			else{
+			else {
 				g2d.drawImage(explosion, craft_en.getX(), craft_en.getY(), this);
 				timer2.start();
 			}
@@ -107,16 +213,15 @@ public class Board extends JPanel implements ActionListener {
 			g.setFont(new Font("Helvetica", Font.BOLD, 20));
 			g.drawString("x " + craft_en.lives, 60, 48);
 			g.drawString("x " + craft.lives, craft.WINDOW_WIDTH - 75, craft.WINDOW_HEIGHT - 60);
-			
+
 		} else {
 			String msg = "Game Over";
-	        Font small = new Font("Helvetica", Font.BOLD, 50);
-	        FontMetrics fm = getFontMetrics(small);
+			Font small = new Font("Helvetica", Font.BOLD, 50);
+			FontMetrics fm = getFontMetrics(small);
 
-	        g.setColor(Color.black);
-	        g.setFont(small);
-	        g.drawString(msg, (craft.WINDOW_WIDTH - fm.stringWidth(msg)) / 2,
-	                craft.WINDOW_HEIGHT / 2);
+			g.setColor(Color.black);
+			g.setFont(small);
+			g.drawString(msg, (craft.WINDOW_WIDTH - fm.stringWidth(msg)) / 2, craft.WINDOW_HEIGHT / 2);
 		}
 
 	}
@@ -202,48 +307,66 @@ public class Board extends JPanel implements ActionListener {
 
 			int key = e.getKeyCode();
 
-			if (key == KeyEvent.VK_ENTER) {
-				craft.fire(false);
+			if (client != null) {
+				if (key == KeyEvent.VK_LEFT) {
+					craft_en.dx = -craft_en.DELTA;
+					mySpeak = "dx=-5";
+				}
+
+				if (key == KeyEvent.VK_RIGHT) {
+					craft_en.dx = craft_en.DELTA;
+					mySpeak = "dx=5";
+				}
+
+				if (key == KeyEvent.VK_UP) {
+					craft_en.dy = -craft_en.DELTA;
+					mySpeak = "dy=-5";
+				}
+
+				if (key == KeyEvent.VK_DOWN) {
+					craft_en.dy = craft_en.DELTA;
+					mySpeak = "dy=5";
+				}
+
+				if (key == KeyEvent.VK_SPACE) {
+					craft_en.fire(false);
+					client.write("fire");
+				}
+
+			} else if (server != null) {
+
+				if (key == KeyEvent.VK_LEFT) {
+					craft.dx = -craft.DELTA;
+					mySpeak = "dx=-5";
+				}
+
+				if (key == KeyEvent.VK_RIGHT) {
+					craft.dx = craft.DELTA;
+					mySpeak = "dx=5";
+				}
+
+				if (key == KeyEvent.VK_UP) {
+					craft.dy = -craft.DELTA;
+					mySpeak = "dy=-5";
+				}
+
+				if (key == KeyEvent.VK_DOWN) {
+					craft.dy = craft.DELTA;
+					mySpeak = "dy=5";
+				}
+
+				if (key == KeyEvent.VK_SPACE) {
+					craft.fire(false);
+					server.write("fire");
+				}
 			}
 
-			if (key == KeyEvent.VK_DOLLAR) {
-				craft.fire(true);
-			}
-
-			if (key == KeyEvent.VK_LEFT) {
-				craft.dx = -craft.DELTA;
-			}
-
-			if (key == KeyEvent.VK_RIGHT) {
-				craft.dx = craft.DELTA;
-			}
-
-			if (key == KeyEvent.VK_UP) {
-				craft.dy = -craft.DELTA;
-			}
-
-			if (key == KeyEvent.VK_DOWN) {
-				craft.dy = craft.DELTA;
-			}
-
-			if (key == KeyEvent.VK_SPACE) {
-				craft_en.fire(false);
-			}
-
-			if (key == KeyEvent.VK_Q) {
-				craft_en.dx = -craft_en.DELTA;
-			}
-
-			if (key == KeyEvent.VK_D) {
-				craft_en.dx = craft_en.DELTA;
-			}
-
-			if (key == KeyEvent.VK_Z) {
-				craft_en.dy = -craft_en.DELTA;
-			}
-
-			if (key == KeyEvent.VK_S) {
-				craft_en.dy = craft_en.DELTA;
+			if (!mySpeak.equals(check)) {
+				if (server != null)
+					server.write(mySpeak);
+				else
+					client.write(mySpeak);
+				check = mySpeak;
 			}
 
 		}
@@ -253,37 +376,57 @@ public class Board extends JPanel implements ActionListener {
 
 			int key = e.getKeyCode();
 
-			if (key == KeyEvent.VK_LEFT) {
-				craft.dx = 0;
+			if (client != null) {
+				if (key == KeyEvent.VK_LEFT) {
+					craft_en.dx = 0;
+					mySpeak = "dx=0";
+				}
+
+				if (key == KeyEvent.VK_RIGHT) {
+					craft_en.dx = 0;
+					mySpeak = "dx=0";
+				}
+
+				if (key == KeyEvent.VK_UP) {
+					craft_en.dy = 0;
+					mySpeak = "dy=0";
+				}
+
+				if (key == KeyEvent.VK_DOWN) {
+					craft_en.dy = 0;
+					mySpeak = "dy=0";
+				}
 			}
 
-			if (key == KeyEvent.VK_RIGHT) {
-				craft.dx = 0;
+			else if (server != null) {
+
+				if (key == KeyEvent.VK_LEFT) {
+					craft.dx = 0;
+					mySpeak = "dx=0";
+				}
+
+				if (key == KeyEvent.VK_RIGHT) {
+					craft.dx = 0;
+					mySpeak = "dx=0";
+				}
+
+				if (key == KeyEvent.VK_UP) {
+					craft.dy = 0;
+					mySpeak = "dy=0";
+				}
+
+				if (key == KeyEvent.VK_DOWN) {
+					craft.dy = 0;
+					mySpeak = "dy=0";
+				}
+
 			}
 
-			if (key == KeyEvent.VK_UP) {
-				craft.dy = 0;
-			}
-
-			if (key == KeyEvent.VK_DOWN) {
-				craft.dy = 0;
-			}
-
-			if (key == KeyEvent.VK_Q) {
-				craft_en.dx = 0;
-			}
-
-			if (key == KeyEvent.VK_D) {
-				craft_en.dx = 0;
-			}
-
-			if (key == KeyEvent.VK_Z) {
-				craft_en.dy = 0;
-			}
-
-			if (key == KeyEvent.VK_S) {
-				craft_en.dy = 0;
-			}
+			if (server != null)
+				server.write(mySpeak);
+			else
+				client.write(mySpeak);
+			check = mySpeak;
 
 		}
 	}
